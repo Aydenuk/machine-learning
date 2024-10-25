@@ -3,7 +3,6 @@
 
 # In[2]:
 
-
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, KFold, cross_val_predict
@@ -99,8 +98,6 @@ plt.show()
 
 # 您可以添加Wine数据集的类似可视化。
 
-
-# In[ ]:
 
 
 
