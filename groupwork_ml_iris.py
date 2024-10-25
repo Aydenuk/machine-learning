@@ -69,17 +69,6 @@ for name, metrics in results_iris.items():
     print(
         f"{name}: 准确率 = {metrics[0]:.4f}, 精确率 = {metrics[1]:.4f}, 召回率 = {metrics[2]:.4f}, F1-score = {metrics[3]:.4f}")
 
-# --- 重复进行Wine数据集的处理 ---
-results_wine = {}
-X_wine_scaled = scaler.fit_transform(X_wine)
-for name, model in models.items():
-    accuracy, precision, recall, f1 = evaluate_model(model, X_wine_scaled, y_wine)
-    results_wine[name] = (accuracy, precision, recall, f1)
-
-# 打印Wine数据集的结果
-for name, metrics in results_wine.items():
-    print(
-        f"{name}: 准确率 = {metrics[0]:.4f}, 精确率 = {metrics[1]:.4f}, 召回率 = {metrics[2]:.4f}, F1-score = {metrics[3]:.4f}")
 
 # --- 可视化（示例）---
 algorithms = list(results_iris.keys())
