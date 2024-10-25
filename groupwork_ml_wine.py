@@ -78,7 +78,7 @@ matplotlib.rcParams['axes.unicode_minus'] = False
 plt.figure(figsize=(10, 6))
 plt.bar(metrics.keys(), metrics.values(), color=['blue', 'orange', 'green', 'red'])
 plt.ylabel('Value')
-plt.title('Performance indicators')
+plt.title('Performance indicators of linear regression')
 plt.ylim(0, 1)
 # plt.axhline(y=0.5, color='grey', linestyle='--')
 plt.grid(axis='y')
