@@ -7,9 +7,6 @@ Description: The group work of Wine
 
 # 在Jupyter Lab上可能提示你没有下载ucimlrepo， 这个时候用：!pip install ucimlrepo
 import matplotlib
-# import pandas as pd
-# import numpy as np
-# import pandas.core.apply
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from ucimlrepo import fetch_ucirepo
@@ -57,6 +54,7 @@ precision = precision_score(y_test, y_pred, average='weighted')
 recall = recall_score(y_test, y_pred, average='weighted')
 f1 = f1_score(y_test, y_pred, average='weighted')
 
+
 print(f"The accuracy of this model is {accuracy}")
 print(f"The precision of this model is {precision}")
 print(f"The recall of this model is {recall}")
@@ -71,7 +69,7 @@ metrics = {
 }
 
 
-matplotlib.rcParams['font.sans-serif'] = ['SimHei']
+matplotlib.rcParams['font.sans-serif'] = ['Arial']
 matplotlib.rcParams['axes.unicode_minus'] = False
 
 
@@ -80,6 +78,6 @@ plt.bar(metrics.keys(), metrics.values(), color=['blue', 'orange', 'green', 'red
 plt.ylabel('Value')
 plt.title('Performance indicators of linear regression')
 plt.ylim(0, 1)
-# plt.axhline(y=0.5, color='grey', linestyle='--')
 plt.grid(axis='y')
 plt.show()
+
