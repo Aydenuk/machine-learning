@@ -12,19 +12,17 @@ from sklearn.linear_model import LogisticRegression
 from ucimlrepo import fetch_ucirepo
 
 import matplotlib.pyplot as plt
-# import seaborn as sns
 
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import warnings
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 warnings.filterwarnings("ignore")
 
 
 wine_quality = fetch_ucirepo(id=186)
-# 提取特征和目标
 X = wine_quality.data.features
 y = wine_quality.data.targets.values
 
@@ -38,13 +36,11 @@ def classify_quality(quality):
         return 'normal wine'
 
 
-# y_class = y.apply(classify_quality)
+# y_class = y.apply(classify_quality) panda的方法返回的会是一个pd.Series对象，不是我们想要的
 y_class = [classify_quality(quality) for quality in y]
 
-# 分割数据集
 X_train, X_test, y_train, y_test = train_test_split(X, y_class, test_size=0.3, random_state=42)
-# 初始化逻辑回归模型
-# model = LinearRegression()
+# 设置模型优化算法的最大迭代次数, 过少可能会导致模型提前停止，导致未收敛
 model = LogisticRegression(max_iter=1000)
 model.fit(X_train, y_train)
 y_pred = model.predict(X_test)
@@ -60,7 +56,6 @@ print(f"The precision of this model is {precision}")
 print(f"The recall of this model is {recall}")
 print(f"The f1 of this model is {f1}")
 
-# 可视化模型性能指标
 metrics = {
     'Accuracy': accuracy,
     'Precision': precision,
