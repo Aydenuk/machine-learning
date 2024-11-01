@@ -24,13 +24,6 @@ iris_df['target'] = iris.target
 X_iris = iris_df.iloc[:, :-1].values  # 特征
 y_iris = iris_df.iloc[:, -1].values  # 目标变量
 
-# 加载 wine 数据集
-wine = load_wine()
-wine_df = pd.DataFrame(data=wine.data, columns=wine.feature_names)
-wine_df['target'] = wine.target
-X_wine = wine_df.iloc[:, :-1].values  # 特征
-y_wine = wine_df.iloc[:, -1].values  # 目标变量
-
 
 # --- 模型训练和评估 ---
 
@@ -48,10 +41,10 @@ def evaluate_model(model, X, y, cv=5):
 
 # 定义模型
 models = {
-    "逻辑回归": LogisticRegression(max_iter=300),
-    "支持向量机": SVC(),
-    "决策树": DecisionTreeClassifier(),
-    "多层感知器": MLPClassifier(hidden_layer_sizes=(100,), max_iter=300)
+    "LR": LogisticRegression(max_iter=300),
+    "SVM": SVC(),
+    "DT": DecisionTreeClassifier(),
+    "MLP": MLPClassifier(hidden_layer_sizes=(100,), max_iter=300)
 }
 
 # 数据缩放
@@ -67,25 +60,24 @@ for name, model in models.items():
 # 打印Iris数据集的结果
 for name, metrics in results_iris.items():
     print(
-        f"{name}: 准确率 = {metrics[0]:.4f}, 精确率 = {metrics[1]:.4f}, 召回率 = {metrics[2]:.4f}, F1-score = {metrics[3]:.4f}")
+        f"{name}: Accuracy rate = {metrics[0]:.4f}, Precision rate = {metrics[1]:.4f}, Recall rate = {metrics[2]:.4f}, F1-score = {metrics[3]:.4f}")
 
 
-# --- 可视化（示例）---
 algorithms = list(results_iris.keys())
 mean_accuracy = [metrics[0] for metrics in results_iris.values()]
 
 plt.figure(figsize=(10, 6))
 plt.bar(algorithms, mean_accuracy)
-plt.xlabel("算法")
-plt.ylabel("准确率")
-plt.title("Iris数据集算法比较")
-plt.rcParams['font.sans-serif'] = ['SimHei']  # 或者其他支持UTF-8的字体
-plt.rcParams['axes.unicode_minus'] = False  # 避免负号显示为方块
+plt.xlabel("Algorithm")
+plt.ylabel("Accuracy rate")
+plt.title("Iris comparison")
+plt.rcParams['font.sans-serif'] = ['SimHei']
+plt.rcParams['axes.unicode_minus'] = False
 plt.xticks(rotation=45, ha="right")
 plt.tight_layout()
 plt.show()
 
-# 您可以添加Wine数据集的类似可视化。
+
 
 
 

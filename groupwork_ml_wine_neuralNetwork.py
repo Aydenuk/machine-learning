@@ -28,11 +28,11 @@ y = wine_quality.data.targets.values
 
 def classify_quality(quality):
     if quality <= 4:
-        return 0  # bad wine
-    if quality > 6:
-        return 1  # good wine
+        return 0
+    if quality > 10:
+        return 1
     else:
-        return 2  # normal wine
+        return 2
 
 
 # 将目标转换成分类
