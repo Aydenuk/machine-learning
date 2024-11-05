@@ -8,8 +8,10 @@ import matplotlib
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from ucimlrepo import fetch_ucirepo
-
+import numpy as np
 import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split, cross_val_score
 
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
@@ -42,10 +44,19 @@ model = DecisionTreeClassifier(random_state=42, max_depth=5)
 model.fit(X_train, y_train)
 Y_pred = model.predict(X_test)
 
+# 模拟k-fold功能
+cross_value_scores = cross_val_score(model, X, y_class, cv=5, scoring='f1_weighted')
+# 输出交叉验证结果
+# 打印每个折叠的 F1 分数及其均值和标准差
+print(f"Cross-validated F1 scores: {cross_value_scores}")
+print(f"Mean F1 score: {np.mean(cross_value_scores)}")
+# print(f"Standard deviation of F1 scores: {np.std(cross_value_scores)}")
+
 accuracy = accuracy_score(y_test, Y_pred)
 precision = precision_score(y_test, Y_pred, average='weighted')
 recall = recall_score(y_test, Y_pred, average='weighted')
-f1 = f1_score(y_test, Y_pred, average='weighted')
+# f1 = f1_score(y_test, y_pred, average='weighted')
+f1 = np.mean(cross_value_scores)
 
 print(f"The accuracy of this model is {accuracy}")
 print(f"The precision of this model is {precision}")
