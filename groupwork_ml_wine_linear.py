@@ -20,7 +20,6 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 
 import os
 import warnings
-import seaborn as sns 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 warnings.filterwarnings("ignore")
