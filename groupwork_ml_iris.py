@@ -14,6 +14,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import matplotlib.pyplot as plt
 from sklearn.datasets import load_iris, load_wine
+from sklearn.metrics import mean_squared_error
 
 # --- 数据加载和预处理 ---
 
@@ -29,14 +30,12 @@ y_iris = iris_df.iloc[:, -1].values  # 目标变量
 
 def evaluate_model(model, X, y, cv=5):
     kf = KFold(n_splits=cv, shuffle=True, random_state=42)
-    y_pred = cross_val_predict(model, X, y, cv=kf)
-
-    accuracy = accuracy_score(y, y_pred)
-    precision = precision_score(y, y_pred, average='weighted')
-    recall = recall_score(y, y_pred, average='weighted')
-    f1 = f1_score(y, y_pred, average='weighted')
-
-    return accuracy, precision, recall, f1
+    MST = []
+    for train, test in kf.split(X, y): 
+        model.fit(X[train], y[train])
+        y_pred = model.predict(X[test])
+        MST.append(mean_squared_error(y_pred,y[test]))     # 计算单个交叉的MST
+    return np.mean(MST)                                    # 返回每次交叉的MST均值
 
 
 # 定义模型
@@ -54,29 +53,26 @@ X_iris_scaled = scaler.fit_transform(X_iris)
 # 评估Iris数据集的模型
 results_iris = {}
 for name, model in models.items():
-    accuracy, precision, recall, f1 = evaluate_model(model, X_iris_scaled, y_iris)
-    results_iris[name] = (accuracy, precision, recall, f1)
+    MST = evaluate_model(model, X_iris_scaled, y_iris)
+    results_iris[name] = MST
 
 # 打印Iris数据集的结果
 for name, metrics in results_iris.items():
-    print(
-        f"{name}: Accuracy rate = {metrics[0]:.4f}, Precision rate = {metrics[1]:.4f}, Recall rate = {metrics[2]:.4f}, F1-score = {metrics[3]:.4f}")
-
+    print(f"{name}: Mean Squared Error = {metrics:.4f}")
 
 algorithms = list(results_iris.keys())
-mean_accuracy = [metrics[0] for metrics in results_iris.values()]
+MSTs = [MST for MST in results_iris.values()]
 
 plt.figure(figsize=(10, 6))
-plt.bar(algorithms, mean_accuracy)
+plt.bar(algorithms, MSTs)
 plt.xlabel("Algorithm")
-plt.ylabel("Accuracy rate")
+plt.ylabel("Mean Squared Error")
 plt.title("Iris comparison")
 plt.rcParams['font.sans-serif'] = ['SimHei']
 plt.rcParams['axes.unicode_minus'] = False
 plt.xticks(rotation=45, ha="right")
 plt.tight_layout()
 plt.show()
-
 
 
 
