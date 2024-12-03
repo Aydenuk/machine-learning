@@ -87,7 +87,7 @@ model_rf.fit(X_train, y_train)
 sorted_index = model_rf.feature_importances_.argsort()
 columns_sort = X_train.columns[sorted_index]
 base_columns = ["Gene", "ER", "HER2"]
-columns_choose = columns_sort[-100:].tolist()
+columns_choose = columns_sort[-150:].tolist()
 columns_choose = list(set(columns_choose) | set(base_columns))
 joblib.dump(columns_choose, "columns_choose.model")
 
