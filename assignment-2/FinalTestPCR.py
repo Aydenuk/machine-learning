@@ -83,7 +83,7 @@ X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, te
 model_rf = RandomForestClassifier(n_estimators=100, random_state=42)
 model_rf.fit(X_train, y_train)
 
-# 选取 Top100 个特征，同时包括 Gene、ER、HER2 特征
+# 选取 Top150 个特征，同时包括 Gene、ER、HER2 特征
 sorted_index = model_rf.feature_importances_.argsort()
 columns_sort = X_train.columns[sorted_index]
 base_columns = ["Gene", "ER", "HER2"]
