@@ -1,5 +1,5 @@
 """
-Author: Ayden et al.
+Author: feilong.zhou, ran.he, xiaoxing.lin, tianbo.qin, deng.wei
 Date: 2024-11-28
 Description: Classification model to predict pCR (outcome) using Random Forest and SVM
 """
@@ -14,7 +14,7 @@ import joblib
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, accuracy_score
+from sklearn.metrics import classification_report, accuracy_score, precision_score, recall_score, f1_score
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
@@ -83,13 +83,14 @@ X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, te
 model_rf = RandomForestClassifier(n_estimators=100, random_state=42)
 model_rf.fit(X_train, y_train)
 
-# 选取 Top150 个特征，同时包括 Gene、ER、HER2 特征
+# 选取 Top200 个特征，同时包括 Gene、ER、HER2 特征
 sorted_index = model_rf.feature_importances_.argsort()
 columns_sort = X_train.columns[sorted_index]
 base_columns = ["Gene", "ER", "HER2"]
-columns_choose = columns_sort[-150:].tolist()
+columns_choose = columns_sort[-50:].tolist()
 columns_choose = list(set(columns_choose) | set(base_columns))
 joblib.dump(columns_choose, "columns_choose.model")
+print(f"被选择出来的特征为{columns_choose}")
 
 # ------------------------------
 # Visualization of Feature Importance (特征重要性可视化)
@@ -120,8 +121,18 @@ joblib.dump(model_svm, 'svm.model')
 
 # 预测并打印评估指标
 y_pred = model_svm.predict(X_test_final)
-print(classification_report(y_test, y_pred))
-print("Accuracy:", accuracy_score(y_test, y_pred))
+# print(classification_report(y_test, y_pred))
+accuracy = accuracy_score(y_test, y_pred)
+precision = precision_score(y_test, y_pred, average='binary')
+recall = recall_score(y_test, y_pred, average='binary')
+f1 = f1_score(y_test, y_pred, average='binary')
+
+print("\nDetailed Metrics for pCR (outcome):")
+print(f"Accuracy: {accuracy:.4f}")
+print(f"Precision: {precision:.4f}")
+print(f"Recall: {recall:.4f}")
+print(f"F1-Score: {f1:.4f}")
+
 
 # ------------------------------
 # Confusion Matrix Visualization (混淆矩阵可视化)
@@ -132,7 +143,6 @@ plt.title('Confusion Matrix')
 plt.xlabel('Predicted Values')
 plt.ylabel('Actual Values')
 plt.show()
-
 
 # ------------------------------
 # Test Set Prediction (30%)
@@ -163,9 +173,10 @@ X_test_final = test_data.reindex(columns=columns_choose, fill_value=0)
 # 使用 SVM 模型进行预测
 y_pred_test = model_svm.predict(X_test_final)
 
-# 保存预测结果（包括 ID 列以方便对照）
+# 保存预测结果
 output = pd.DataFrame({'ID': id_list, 'Prediction': y_pred_test})
 output_file_path = f'predict_data/Prediction_pcr_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
 output.to_excel(output_file_path, index=False, engine='openpyxl')
 
 print(f"\n预测结果已保存至 {output_file_path}")
+print(f"最终的结果是:\n{output}")

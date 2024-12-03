@@ -1,152 +1,138 @@
 """
 Author: Ayden et al.
 Date: 2024-11-14
-Description: assignment-2 for regression method
+Description: assignment-2 for regression method using Linear Regression to predict RelapseFreeSurvival (outcome)
 """
-import os
+
+# ------------------------------
+# Imports (Importing Libraries)
+# ------------------------------
 import datetime
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, PolynomialFeatures
 from sklearn.impute import SimpleImputer
-from sklearn.metrics import precision_score, recall_score, f1_score
-from sklearn.feature_selection import SelectKBest, f_classif
-from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-
-from scipy import stats
-
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LinearRegression
+import joblib
+from sklearn.pipeline import make_pipeline
+import warnings
+import matplotlib.pyplot as plt
 
-
-# 主题： 利用线性回归模型来预测relapsefreesurvival_prediction值
 
 # ------------------------------
 # Data Preprocessing (10%)
 # ------------------------------
 print("Data processing模块从这里开始")  # 正式上线时候删除
-training_file_path = 'traning_data/TrainDataset.xls'
+training_file_path = 'traning_data/TrainDataset2024.xls'
 data = pd.read_excel(training_file_path)
 
-# data_replace = data.replace(999, np.nan, inplace=True)
-# 填充缺失值
-imputer = SimpleImputer(strategy='mean')
-data_numeric = data.select_dtypes(include=[np.number])
-data_filled_numeric = pd.DataFrame(imputer.fit_transform(data_numeric), columns=data_numeric.columns)
+# 删除重复行并删除不需要的列
+data.drop_duplicates(inplace=True)
+data.drop(columns=["ID", "pCR (outcome)"], inplace=True)
 
-# 这里我将表中的value分为了数值和非数值进行处理
-data_non_numeric = data.select_dtypes(exclude=[np.number])
-imputer_non_numeric = SimpleImputer(strategy='most_frequent')
-data_filled_non_numeric = pd.DataFrame(imputer_non_numeric.fit_transform(data_non_numeric), columns=data_non_numeric.columns)
-# 合并数值和非数值数据
-data_filled = pd.concat([data_filled_numeric, data_filled_non_numeric], axis=1)
+# 填充缺失值, 使用最频繁值
+data.replace(999, np.nan, inplace=True)
+imputer = SimpleImputer(strategy='most_frequent')
+data_filled = pd.DataFrame(imputer.fit_transform(data), columns=data.columns)
+
+# choose object type columns
+non_numeric_feature = data.select_dtypes(include=['object'])
+numeric_feature = data.select_dtypes(include=['number'], exclude=['object'])
+selected_feature = numeric_feature.columns.tolist()
+selected_feature.pop(0)
+print(selected_feature)
+joblib.dump(selected_feature, "selected_feature.model")
+
+
+# 选择数值型特征并进行标准化
+selected_feature = data_filled.select_dtypes(include=['number']).columns.tolist()
+selected_feature.remove('RelapseFreeSurvival (outcome)')
+scaler = MinMaxScaler()
+data_filled[selected_feature] = scaler.fit_transform(data_filled[selected_feature])
+joblib.dump(scaler, "scaler.model")
 
 # ------------------------------
-# Feature Selection (25%)
+# Data Preparation (数据准备)
 # ------------------------------
-print("Feature selection模块从这里开始")  # 正式上线时候删除
-# 将999替换为列中的frequent value
-columns_to_replace = [
-    'PgR', 'HER2',
-    'TrippleNegative', 'ChemoGrade', 'Proliferation', 'HistologyType',
-    'LNStatus', 'TumourStage', 'Gene'
-]
-# 填充缺失值，这里我将nan全部使用最频繁值来填充
-imputer = SimpleImputer(missing_values=999, strategy='most_frequent')
-data[columns_to_replace] = pd.DataFrame(imputer.fit_transform(data[columns_to_replace]), columns=columns_to_replace)
-
-# 获取除了ID和两个预测值外的其他feature作为预测feature
-excluded_feature = ['ID', 'pCR (outcome)', 'RelapseFreeSurvival (outcome)']
-selected_feature = [col for col in data.columns if col not in excluded_feature]
-
-
-# 分离特征和目标变量，这里的ID不应该包含在内
+# 分离特征和目标变量，确保目标变量不在特征集中
 X = data_filled[selected_feature]
-y_pcr = data_filled['pCR (outcome)']
-y_rfs = data_filled['RelapseFreeSurvival (outcome)']
-print(f"当前用于预测的列:{selected_feature}")  # 上线的时候删除
+y = data_filled['RelapseFreeSurvival (outcome)'].values.ravel()  # 保证 y 为 1D 数组
 
 # ------------------------------
-# ML Method Development (25%)
+# Train Linear Regression Model (线性回归模型训练)
 # ------------------------------
-X_train_pcr, X_test_pcr, y_train_pcr, y_test_pCR = train_test_split(X, y_pcr, test_size=0.2, random_state=42)
-model_pcr = LinearRegression()
-model_pcr.fit(X_train_pcr, y_train_pcr)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# 试试标准化
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
-# 替换原始特征
-X = pd.DataFrame(X_scaled, columns=X.columns)
-print(f"替换后的特征矩阵已应用。")
+# 基础线性回归模型
+model = LinearRegression()
+model.fit(X_train, y_train)
+joblib.dump(model, "linear_regression.model")
 
-
-# 训练 RelapseFreeSurvival (outcome) 的模型
-print("Training model for RelapseFreeSurvival (outcome)")
-X_train_rfs, X_test_rfs, y_train_rfs, y_test_rfs = train_test_split(X, y_rfs, test_size=0.2, random_state=42)
-model_rfs = LinearRegression()
-model_rfs.fit(X_train_rfs, y_train_rfs)
+# 评估模型
+y_pred = model.predict(X_test)
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+mae = mean_absolute_error(y_test, y_pred)
+print(f'Mean Absolute Error: {mae}')
+print(f'Mean Squared Error: {mse}')
+print(f'R² Score: {r2}')
 
 # ------------------------------
-# Method Evaluation (10%)
+# Polynomial Linear Regression (多项式线性回归)
 # ------------------------------
-y_pred_rfs = model_rfs.predict(X_test_rfs)
-# 均绝对误差
-mae_rfs = mean_absolute_error(y_test_rfs, y_pred_rfs)
-# 均方误差
-mse_rfs = mean_squared_error(y_test_rfs, y_pred_rfs)
-# 均方根误差
-rmse_rfs = np.sqrt(mse_rfs)
-# 决定系数
-r2_rfs = r2_score(y_test_rfs, y_pred_rfs)
+model = make_pipeline(PolynomialFeatures(3), LinearRegression())
+model.fit(X_train, y_train)
+joblib.dump(model, "lr.model")
+
+# 评估多项式模型
+y_pred = model.predict(X_test)
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+mae = mean_absolute_error(y_test, y_pred)
+print(f'Mean Squared Error: {mse}')
+print(f"R²: {r2}")
+print(f'Mean Absolute Error: {mae}')
 
 
-print(f"\nModel Evaluation for rfs(outcome):")
-print(f"Mean Squared Error (MSE) for RelapseFreeSurvival: {mse_rfs:.4f}")
-print(f"Mean Absolute Error (MAE) for RelapseFreeSurvival: {mae_rfs:.4f}")
-print(f"Root Mean Squared Error (RMSE) for RelapseFreeSurvival: {rmse_rfs:.4f}")
-print(f"R² Score for RelapseFreeSurvival: {r2_rfs:.4f}")
+# ------------------------------
+# Test Set Prediction (测试集预测)
+# ------------------------------
+warnings.filterwarnings('ignore')
+plt.rcParams['axes.unicode_minus'] = False
 
-# ------------------------------
-# Test Set Prediction (30%)
-# ------------------------------
+scaler = joblib.load("scaler.model")
+model = joblib.load("lr.model")
+columns_numric = joblib.load("selected_feature.model")
+print(columns_numric)
+
 test_file_path = 'test_data/TestDatasetExample.xls'
 test_data = pd.read_excel(test_file_path)
 
-# 确保测试集特征与训练集一致
-test_data_aligned = test_data[X.columns]
-
-# 填充缺失值
-for column in X.columns:
-    if test_data_aligned[column].isnull().any():
-        mean_value = X_train_pcr[column].mean()  # 使用训练集均值填充
-        test_data_aligned[column].fillna(mean_value, inplace=True)
-
-# 使用训练的模型进行预测
-test_predictions_pcr = model_pcr.predict(test_data_aligned)
-test_predictions_rfs = model_rfs.predict(test_data_aligned)
+# 给 ID 留个种，保证后面报告的时候能体现
+id_list = test_data["ID"].tolist()
+print(id_list)
+# 删除不需要的列并处理缺失值
+id_list = test_data["ID"].tolist()
+test_data.drop(columns=["ID"], inplace=True)
+test_data.replace(999, np.nan, inplace=True)
+imputer = SimpleImputer(strategy='most_frequent')
+test_data_filled = pd.DataFrame(imputer.fit_transform(test_data), columns=test_data.columns)
+test_data = test_data_filled.copy()
 
 
-# 初始化空列表，用于存储分行后的结果
-results = []
+# 使用缩放器进行特征缩放
+test_data_filled[selected_feature] = scaler.transform(test_data_filled[selected_feature])
+# **确保测试数据只包含特征列**
+X_test_final = test_data_filled[selected_feature]
+# 使用训练好的线性回归模型进行预测
+y_pred_test = model.predict(X_test_final)
 
-output = pd.DataFrame({
-    'pcr_prediction': test_predictions_pcr,
-    'relapsefreesurvival_prediction': test_predictions_rfs
-})
-
-timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-# 确保每个预测值都单独填充在对应列中
-output_file_path = f'predict_data/Prediction_rfs_{timestamp}.xlsx'
+# 保存预测结果
+output = pd.DataFrame({'ID': id_list, 'Prediction': y_pred_test})
+output_file_path = f'predict_data/Prediction_rfs_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
 output.to_excel(output_file_path, index=False, engine='openpyxl')
 
 print(f"\n预测结果已保存至 {output_file_path}")
-
-
-
-
-
-
+print(f"最终的结果是:\n{output}")
