@@ -30,20 +30,19 @@ print("Data processing模块从这里开始")  # 正式上线时候删除
 training_file_path = 'traning_data/TrainDataset2024.xls'
 data = pd.read_excel(training_file_path)
 
-# 删除重复行
 data.drop_duplicates(inplace=True)
-# 删除不需要的列
 data.drop(columns=["ID", "RelapseFreeSurvival (outcome)"], inplace=True)
 data.replace(999, np.nan, inplace=True)
 
-# 使用最频繁值填充缺失值
 imputer = SimpleImputer(strategy='most_frequent')
 data_filled = pd.DataFrame(imputer.fit_transform(data), columns=data.columns)
 data = data_filled.copy()
 
+
+# ------------------------------
+# Feature Selection (25%)
 # ------------------------------
 # Feature Scaling (数据标准化)
-# ------------------------------
 # 获取数据框中所有数值型列，排除目标列 'pCR (outcome)'
 df_numeric_cols = data.select_dtypes(include=['number'])
 columns_numeric = [col for col in df_numeric_cols.columns if col != 'pCR (outcome)']
@@ -145,7 +144,7 @@ plt.ylabel('Actual Values')
 plt.show()
 
 # ------------------------------
-# Test Set Prediction (30%)
+# Test Set Prediction
 # ------------------------------
 # 读取测试数据集
 test_file_path = 'test_data/TestDatasetExample.xls'
@@ -175,7 +174,7 @@ y_pred_test = model_svm.predict(X_test_final)
 
 # 保存预测结果
 output = pd.DataFrame({'ID': id_list, 'Prediction': y_pred_test})
-output_file_path = f'predict_data/Prediction_pcr_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+output_file_path = f'predict_data/pcr/Prediction_pcr_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
 output.to_excel(output_file_path, index=False, engine='openpyxl')
 
 print(f"\n预测结果已保存至 {output_file_path}")

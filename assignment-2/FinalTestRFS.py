@@ -1,12 +1,9 @@
 """
-Author: Ayden et al.
+Author: feilong.zhou, ran.he, xiaoxing.lin, tianbo.qin, deng.wei
 Date: 2024-11-14
 Description: assignment-2 for regression method using Linear Regression to predict RelapseFreeSurvival (outcome)
 """
 
-# ------------------------------
-# Imports (Importing Libraries)
-# ------------------------------
 import datetime
 import pandas as pd
 import numpy as np
@@ -37,12 +34,11 @@ data.replace(999, np.nan, inplace=True)
 imputer = SimpleImputer(strategy='most_frequent')
 data_filled = pd.DataFrame(imputer.fit_transform(data), columns=data.columns)
 
-# choose object type columns
 non_numeric_feature = data.select_dtypes(include=['object'])
 numeric_feature = data.select_dtypes(include=['number'], exclude=['object'])
 selected_feature = numeric_feature.columns.tolist()
 selected_feature.pop(0)
-print(selected_feature)
+print(selected_feature)  # 正式上线时候删除
 joblib.dump(selected_feature, "selected_feature.model")
 
 
@@ -58,14 +54,9 @@ joblib.dump(scaler, "scaler.model")
 # ------------------------------
 # 分离特征和目标变量，确保目标变量不在特征集中
 X = data_filled[selected_feature]
-y = data_filled['RelapseFreeSurvival (outcome)'].values.ravel()  # 保证 y 为 1D 数组
-
-# ------------------------------
-# Train Linear Regression Model (线性回归模型训练)
-# ------------------------------
+y = data_filled['RelapseFreeSurvival (outcome)'].values.ravel()
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# 基础线性回归模型
 model = LinearRegression()
 model.fit(X_train, y_train)
 joblib.dump(model, "linear_regression.model")
@@ -99,8 +90,8 @@ print(f'Mean Absolute Error: {mae}')
 # ------------------------------
 # Test Set Prediction (测试集预测)
 # ------------------------------
-warnings.filterwarnings('ignore')
-plt.rcParams['axes.unicode_minus'] = False
+# warnings.filterwarnings('ignore')
+# plt.rcParams['axes.unicode_minus'] = False
 
 scaler = joblib.load("scaler.model")
 model = joblib.load("lr.model")
@@ -131,7 +122,7 @@ y_pred_test = model.predict(X_test_final)
 
 # 保存预测结果
 output = pd.DataFrame({'ID': id_list, 'Prediction': y_pred_test})
-output_file_path = f'predict_data/Prediction_rfs_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+output_file_path = f'predict_data/rfs/Prediction_rfs_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
 output.to_excel(output_file_path, index=False, engine='openpyxl')
 
 print(f"\n预测结果已保存至 {output_file_path}")
