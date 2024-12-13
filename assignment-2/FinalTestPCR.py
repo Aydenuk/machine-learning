@@ -26,7 +26,6 @@ plt.rcParams['axes.unicode_minus'] = False
 # ------------------------------
 # Data Preprocessing
 # ------------------------------
-print("Data processing module starts here")  # Remove before production
 training_file_path = 'traning_data/TrainDataset2024.xls'
 data = pd.read_excel(training_file_path)
 
